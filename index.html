@@ -13,31 +13,21 @@
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0f1114; --surface: #181b20; --text: #d8d4cc;
-    --text-dim: rgba(216,212,204,0.55); --accent: #e8c46a;
-    --accent-dim: rgba(232,196,106,0.2); --teal: #4ec9b0;
-    --serif: 'Cormorant Garamond', Georgia, serif;
-    --mono: 'IBM Plex Mono', Menlo, monospace;
-    --sans: 'IBM Plex Sans', 'Helvetica Neue', sans-serif;
-  }
-  html { background: var(--bg); color: var(--text); }
-  body { font-family: var(--sans); line-height: 1.7; padding: 24px 16px; min-height: 100vh; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  input[type=range] { height: 4px; accent-color: var(--accent); }
-  input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-  .math-block { background: rgba(255,255,255,0.03); border-left: 3px solid rgba(232,196,106,0.3); padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 12px 0; overflow-x: auto; }
-  .val-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 14px 16px; }
-  .note { font-size: 0.82rem; color: var(--text-dim); font-style: italic; margin-top: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-family: var(--mono); }
-  th { text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); font-weight: 500; }
-  td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-  tr.hl { background: rgba(232,196,106,0.06); }
-  .works { color: #4ec9b0; } .fails { color: rgba(220,80,80,0.6); }
-  p { margin-bottom: 8px; }
+  :root { --bg:#0f1114; --surface:#181b20; --text:#d8d4cc; --text-dim:rgba(216,212,204,0.55); --accent:#e8c46a; --teal:#4ec9b0; --serif:'Cormorant Garamond',Georgia,serif; --mono:'IBM Plex Mono',Menlo,monospace; --sans:'IBM Plex Sans','Helvetica Neue',sans-serif; }
+  html { background:var(--bg); color:var(--text); }
+  body { font-family:var(--sans); line-height:1.7; padding:24px 16px; min-height:100vh; }
+  a { color:var(--accent); text-decoration:none; } a:hover { text-decoration:underline; }
+  input[type=range] { height:4px; accent-color:var(--accent); }
+  ::-webkit-scrollbar { width:6px; height:6px; } ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
+  .math-block { background:rgba(255,255,255,0.03); border-left:3px solid rgba(232,196,106,0.3); padding:12px 16px; border-radius:0 6px 6px 0; margin:12px 0; overflow-x:auto; }
+  .val-card { background:var(--surface); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:12px 14px; }
+  .note { font-size:0.82rem; color:var(--text-dim); font-style:italic; margin-top:8px; }
+  table { width:100%; border-collapse:collapse; font-size:0.82rem; font-family:var(--mono); }
+  th { text-align:left; padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-dim); font-weight:500; }
+  td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.04); }
+  tr.hl { background:rgba(232,196,106,0.06); }
+  .works { color:#4ec9b0; } .fails { color:rgba(220,80,80,0.6); }
+  p { margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -45,513 +35,254 @@
 <script type="text/babel">
 const { useState, useMemo, useRef, useEffect, useCallback } = React;
 
-/* ── Maths engine ─────────────────────────────────────────────── */
+function metallicMean(k) { return (k + Math.sqrt(k*k+4))/2; }
+function sequenceS(k, N) { const A=k*k+2, s=[2,A]; for(let i=2;i<=N;i++) s.push(A*s[i-1]-s[i-2]); return s; }
+function validExponent(k, n) { return k%2===0 || n%3===0; }
+function fmt(x, dp=6) { if(!Number.isFinite(x)) return "\u2014"; if(Math.abs(x)>=1e12) return x.toExponential(3); if(Math.abs(x)>=1) return x.toLocaleString(undefined,{maximumFractionDigits:dp}); return x.toPrecision(dp); }
+function sequenceSBig(k, N) { const A=BigInt(k*k+2), s=[2n,A]; for(let i=2;i<=N;i++) s.push(A*s[i-1]-s[i-2]); return s; }
+function bigToStr(b) { if(b==null) return "\u2014"; const s=b.toString(); if(s.length<=15) return s; return s.slice(0,6)+"\u2026"+s.slice(-4)+` (${s.length} digits)`; }
+function mod4Big(b) { if(b==null) return 0; return Number(((b%4n)+4n)%4n); }
 
-function metallicMean(k) {
-  return (k + Math.sqrt(k * k + 4)) / 2;
-}
-
-function sequenceS(k, N) {
-  const A = k * k + 2;
-  const s = [2, A];
-  for (let i = 2; i <= N; i++) s.push(A * s[i - 1] - s[i - 2]);
-  return s;
-}
-
-function validExponent(k, n) {
-  return k % 2 === 0 || n % 3 === 0;
-}
-
-function fmt(x, dp = 6) {
-  if (!Number.isFinite(x)) return "\u2014";
-  if (Math.abs(x) >= 1e12) return x.toExponential(3);
-  if (Math.abs(x) >= 1) return x.toLocaleString(undefined, { maximumFractionDigits: dp });
-  return x.toPrecision(dp);
-}
-
-function sequenceSBig(k, N) {
-  const A = BigInt(k * k + 2);
-  const s = [2n, A];
-  for (let i = 2; i <= N; i++) s.push(A * s[i - 1] - s[i - 2]);
-  return s;
-}
-
-function bigToStr(b) {
-  if (b === undefined || b === null) return "\u2014";
-  const s = b.toString();
-  if (s.length <= 15) return s;
-  return s.slice(0, 6) + "\u2026" + s.slice(-4) + ` (${s.length} digits)`;
-}
-
-/* ── KaTeX component ──────────────────────────────────────────── */
-
-function Tex({ children, display = false }) {
+function Tex({ children, display=false }) {
   const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current && window.katex) {
-      try {
-        window.katex.render(children, ref.current, { displayMode: display, throwOnError: false });
-      } catch (_) {}
-    }
-  }, [children, display]);
+  useEffect(() => { if(ref.current && window.katex) try { window.katex.render(children, ref.current, {displayMode:display, throwOnError:false}); } catch(_){} }, [children, display]);
   return <span ref={ref} />;
 }
 
-/* ── Canvas chart ─────────────────────────────────────────────── */
-
-function CanvasChart({ data, xKey, yKey, highlight, highlightColor, labelX, labelY,
-                       width = 580, height = 280, logScale = false, colorFn }) {
+function CanvasChart({ data, xKey, yKey, highlight, highlightColor, labelX, labelY, width=580, height=280, logScale=false, colorFn, fixedYRange }) {
   const canvasRef = useRef(null);
-  const dpr = window.devicePixelRatio || 1;
-
+  const dpr = window.devicePixelRatio||1;
   useEffect(() => {
-    const cvs = canvasRef.current;
-    if (!cvs || !data.length) return;
-    const ctx = cvs.getContext("2d");
-    cvs.width = width * dpr;
-    cvs.height = height * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, width, height);
-
-    const pad = { t: 20, r: 24, b: 36, l: 56 };
-    const pw = width - pad.l - pad.r;
-    const ph = height - pad.t - pad.b;
-
-    const xs = data.map(d => d[xKey]);
-    const ys = data.map(d => logScale ? Math.log10(Math.max(1, d[yKey])) : d[yKey]);
-    const xMin = Math.min(...xs), xMax = Math.max(...xs);
-    const yMin = Math.min(0, ...ys), yMax = Math.max(...ys) * 1.1 || 1;
-    const sx = v => pad.l + ((v - xMin) / (xMax - xMin || 1)) * pw;
-    const sy = v => pad.t + ph - ((v - yMin) / (yMax - yMin || 1)) * ph;
-
-    // grid
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) {
-      const yy = pad.t + (ph * i) / 4;
-      ctx.beginPath(); ctx.moveTo(pad.l, yy); ctx.lineTo(pad.l + pw, yy); ctx.stroke();
-    }
-
-    // axes labels
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.font = '11px "IBM Plex Mono", monospace';
-    ctx.textAlign = "center";
-    ctx.fillText(labelX || xKey, pad.l + pw / 2, height - 4);
-    ctx.save(); ctx.translate(12, pad.t + ph / 2); ctx.rotate(-Math.PI / 2);
-    ctx.fillText(labelY || yKey, 0, 0); ctx.restore();
-
-    // tick labels
-    ctx.textBaseline = "top";
-    const step = Math.max(1, Math.ceil(data.length / 12));
-    data.forEach((d, i) => {
-      if (i % step === 0) ctx.fillText(d[xKey], sx(d[xKey]), height - pad.b + 6);
-    });
-    ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    for (let i = 0; i <= 4; i++) {
-      const val = yMin + ((yMax - yMin) * (4 - i)) / 4;
-      ctx.fillText(logScale ? "10^" + val.toFixed(0) : val.toFixed(yMax < 10 ? 1 : 0),
-                    pad.l - 6, pad.t + (ph * i) / 4);
-    }
-
-    // line
-    ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(180,160,120,0.4)";
-    ctx.beginPath();
-    data.forEach((d, i) => {
-      const px = sx(d[xKey]);
-      const py = sy(logScale ? Math.log10(Math.max(1, d[yKey])) : d[yKey]);
-      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-    });
-    ctx.stroke();
-
-    // dots
-    data.forEach(d => {
-      const px = sx(d[xKey]);
-      const yv = logScale ? Math.log10(Math.max(1, d[yKey])) : d[yKey];
-      const py = sy(yv);
-      const isHl = highlight != null && d[xKey] === highlight;
-      const color = colorFn ? colorFn(d) : (isHl ? (highlightColor || "#e8c46a") : "rgba(180,160,120,0.7)");
-      ctx.beginPath(); ctx.arc(px, py, isHl ? 5 : 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = color; ctx.fill();
-      if (isHl) { ctx.strokeStyle = highlightColor || "#e8c46a"; ctx.lineWidth = 2; ctx.stroke(); }
-    });
-  }, [data, xKey, yKey, highlight, width, height, logScale, dpr, colorFn, highlightColor, labelX, labelY]);
-
-  return <canvas ref={canvasRef} style={{ width, height, display: "block", margin: "0 auto" }} />;
+    const cvs=canvasRef.current; if(!cvs||!data.length) return;
+    const ctx=cvs.getContext("2d"); cvs.width=width*dpr; cvs.height=height*dpr; ctx.scale(dpr,dpr); ctx.clearRect(0,0,width,height);
+    const pad={t:14,r:18,b:30,l:44}, pw=width-pad.l-pad.r, ph=height-pad.t-pad.b;
+    const xs=data.map(d=>d[xKey]), ys=data.map(d=>logScale?Math.log10(Math.max(1,d[yKey])):d[yKey]);
+    const xMin=Math.min(...xs), xMax=Math.max(...xs);
+    let yMin,yMax; if(fixedYRange){yMin=fixedYRange[0];yMax=fixedYRange[1];}else{yMin=Math.min(0,...ys);yMax=Math.max(...ys)*1.1||1;}
+    const sx=v=>pad.l+((v-xMin)/(xMax-xMin||1))*pw, sy=v=>pad.t+ph-((v-yMin)/(yMax-yMin||1))*ph;
+    ctx.strokeStyle="rgba(255,255,255,0.06)"; ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){const yy=pad.t+(ph*i)/4; ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(pad.l+pw,yy);ctx.stroke();}
+    ctx.fillStyle="rgba(255,255,255,0.3)"; ctx.font='10px "IBM Plex Mono",monospace'; ctx.textAlign="center";
+    ctx.fillText(labelX||xKey, pad.l+pw/2, height-2);
+    ctx.save();ctx.translate(9,pad.t+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(labelY||yKey,0,0);ctx.restore();
+    ctx.textBaseline="top"; const step=Math.max(1,Math.ceil(data.length/12));
+    data.forEach((d,i)=>{if(i%step===0) ctx.fillText(d[xKey],sx(d[xKey]),height-pad.b+3);});
+    ctx.textAlign="right";ctx.textBaseline="middle";
+    for(let i=0;i<=4;i++){const val=yMin+((yMax-yMin)*(4-i))/4; ctx.fillText(logScale?"10^"+val.toFixed(0):val.toFixed(yMax<10?1:0),pad.l-3,pad.t+(ph*i)/4);}
+    ctx.lineWidth=1.5;ctx.strokeStyle="rgba(180,160,120,0.3)";ctx.beginPath();
+    data.forEach((d,i)=>{const px=sx(d[xKey]),yv=logScale?Math.log10(Math.max(1,d[yKey])):d[yKey],py=sy(Math.max(yMin,Math.min(yMax,yv)));i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);});ctx.stroke();
+    data.forEach(d=>{const px=sx(d[xKey]),yv=logScale?Math.log10(Math.max(1,d[yKey])):d[yKey],py=sy(Math.max(yMin,Math.min(yMax,yv)));
+      const isHl=highlight!=null&&d[xKey]===highlight; const color=colorFn?colorFn(d):(isHl?(highlightColor||"#e8c46a"):"rgba(180,160,120,0.7)");
+      ctx.beginPath();ctx.arc(px,py,isHl?5:3.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+      if(isHl){ctx.strokeStyle=highlightColor||"#e8c46a";ctx.lineWidth=2;ctx.stroke();}});
+  }, [data,xKey,yKey,highlight,width,height,logScale,dpr,colorFn,highlightColor,labelX,labelY,fixedYRange]);
+  return <canvas ref={canvasRef} style={{width,height,display:"block",margin:"0 auto"}} />;
 }
 
-/* ── Toggle ───────────────────────────────────────────────────── */
-
-function Toggle({ title, children, defaultOpen = false, accent = false, badge }) {
+function Toggle({ title, children, defaultOpen=false, accent=false, badge }) {
   const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div style={{
-      border: `1px solid ${accent ? "rgba(232,196,106,0.25)" : "rgba(255,255,255,0.08)"}`,
-      borderRadius: 8, marginBottom: 12,
-      background: open ? "rgba(255,255,255,0.02)" : "transparent", transition: "background 0.2s"
-    }}>
-      <button onClick={() => setOpen(!open)} style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        width: "100%", padding: "12px 16px", border: "none", background: "none",
-        color: "var(--text)", cursor: "pointer", fontFamily: "var(--serif)",
-        fontSize: "1.05rem", fontWeight: 600, textAlign: "left", gap: 12
-      }}>
-        <span style={{ flex: 1 }}>
-          {title}
-          {badge && <span style={{
-            marginLeft: 10, fontSize: "0.7rem", padding: "2px 8px",
-            background: "rgba(232,196,106,0.15)", color: "#e8c46a",
-            borderRadius: 4, fontFamily: "var(--mono)", fontWeight: 500
-          }}>{badge}</span>}
-        </span>
-        <span style={{
-          fontFamily: "var(--mono)", fontSize: "0.8rem", opacity: 0.5,
-          transition: "transform 0.2s", transform: open ? "rotate(90deg)" : "rotate(0deg)"
-        }}>{"\u25B8"}</span>
-      </button>
-      {open && <div style={{ padding: "0 16px 16px", lineHeight: 1.8, fontSize: "0.92rem" }}>{children}</div>}
-    </div>
-  );
-}
-
-/* ── Metal selector ───────────────────────────────────────────── */
-
-const METALS = [
-  { k: 1, name: "Golden", sym: "\u03C6" },
-  { k: 2, name: "Silver", sym: "\u03B4\u2082" },
-  { k: 3, name: "Bronze", sym: "\u03B4\u2083" },
-  { k: 4, name: "Copper", sym: "\u03B4\u2084" },
-  { k: 5, name: "Nickel", sym: "\u03B4\u2085" },
-  { k: 6, name: "Tin", sym: "\u03B4\u2086" },
-];
-
-function MetalButton({ metal, active, onClick }) {
-  return (
-    <button onClick={onClick} style={{
-      padding: "6px 14px", borderRadius: 6, border: "1px solid",
-      borderColor: active ? "#e8c46a" : "rgba(255,255,255,0.12)",
-      background: active ? "rgba(232,196,106,0.12)" : "transparent",
-      color: active ? "#e8c46a" : "var(--text-dim)",
-      fontFamily: "var(--mono)", fontSize: "0.82rem", cursor: "pointer", transition: "all 0.15s"
-    }}>
-      {metal.name} <span style={{ opacity: 0.6 }}>k={metal.k}</span>
+  return (<div style={{border:`1px solid ${accent?"rgba(232,196,106,0.25)":"rgba(255,255,255,0.08)"}`,borderRadius:6,marginBottom:8,background:open?"rgba(255,255,255,0.02)":"transparent",transition:"background 0.2s"}}>
+    <button onClick={()=>setOpen(!open)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",padding:"8px 14px",border:"none",background:"none",color:"var(--text)",cursor:"pointer",fontFamily:"var(--serif)",fontSize:"0.96rem",fontWeight:600,textAlign:"left",gap:8}}>
+      <span style={{flex:1}}>{title}{badge&&<span style={{marginLeft:8,fontSize:"0.63rem",padding:"1px 6px",background:"rgba(232,196,106,0.15)",color:"#e8c46a",borderRadius:3,fontFamily:"var(--mono)",fontWeight:500}}>{badge}</span>}</span>
+      <span style={{fontFamily:"var(--mono)",fontSize:"0.75rem",opacity:0.5,transition:"transform 0.2s",transform:open?"rotate(90deg)":"rotate(0deg)"}}>{"\u25B8"}</span>
     </button>
-  );
+    {open&&<div style={{padding:"0 14px 12px",lineHeight:1.75,fontSize:"0.88rem"}}>{children}</div>}
+  </div>);
 }
 
-/* ── Slider ───────────────────────────────────────────────────── */
+const METALS=[{k:1,name:"Golden"},{k:2,name:"Silver"},{k:3,name:"Bronze"},{k:4,name:"Copper"},{k:5,name:"Nickel"},{k:6,name:"Tin"}];
 
-function RangeSlider({ value, onChange, min, max, label }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-      <label style={{ fontFamily: "var(--mono)", fontSize: "0.78rem", color: "var(--text-dim)", minWidth: 80 }}>{label}</label>
-      <input type="range" min={min} max={max} step={1} value={value}
-             onChange={e => onChange(Number(e.target.value))} style={{ flex: 1 }} />
-      <span style={{ fontFamily: "var(--mono)", fontSize: "0.82rem", color: "#e8c46a", minWidth: 28, textAlign: "right" }}>{value}</span>
-    </div>
-  );
-}
+function MetalBtn({m,active,onClick}){return(<button onClick={onClick} style={{padding:"3px 9px",borderRadius:4,border:"1px solid",borderColor:active?"#e8c46a":"rgba(255,255,255,0.1)",background:active?"rgba(232,196,106,0.12)":"transparent",color:active?"#e8c46a":"var(--text-dim)",fontFamily:"var(--mono)",fontSize:"0.73rem",cursor:"pointer",transition:"all 0.15s"}}>{m.name} <span style={{opacity:0.5}}>{m.k}</span></button>);}
 
-/* ── Tab bar ──────────────────────────────────────────────────── */
+function Slider({value,onChange,min,max,label}){return(<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+  <label style={{fontFamily:"var(--mono)",fontSize:"0.7rem",color:"var(--text-dim)",minWidth:38}}>{label}</label>
+  <input type="range" min={min} max={max} step={1} value={value} onChange={e=>onChange(Number(e.target.value))} style={{flex:1}} />
+  <span style={{fontFamily:"var(--mono)",fontSize:"0.73rem",color:"#e8c46a",minWidth:20,textAlign:"right"}}>{value}</span>
+</div>);}
 
-function TabBar({ tabs, active, onChange }) {
-  return (
-    <div style={{ display: "flex", gap: 2, background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: 3, marginBottom: 20 }}>
-      {tabs.map(t => (
-        <button key={t.id} onClick={() => onChange(t.id)} style={{
-          flex: 1, padding: "8px 4px", border: "none", borderRadius: 6,
-          background: active === t.id ? "rgba(232,196,106,0.12)" : "transparent",
-          color: active === t.id ? "#e8c46a" : "var(--text-dim)",
-          fontFamily: "var(--serif)", fontSize: "0.88rem", cursor: "pointer",
-          fontWeight: active === t.id ? 600 : 400, transition: "all 0.15s"
-        }}>{t.label}</button>
-      ))}
-    </div>
-  );
-}
-
-/* ── Main ─────────────────────────────────────────────────────── */
+function TabBar({tabs,active,onChange}){return(<div style={{display:"flex",gap:1,background:"rgba(255,255,255,0.04)",borderRadius:5,padding:2,marginBottom:12}}>
+  {tabs.map(t=>(<button key={t.id} onClick={()=>onChange(t.id)} style={{flex:1,padding:"4px 2px",border:"none",borderRadius:4,background:active===t.id?"rgba(232,196,106,0.12)":"transparent",color:active===t.id?"#e8c46a":"var(--text-dim)",fontFamily:"var(--serif)",fontSize:"0.8rem",cursor:"pointer",fontWeight:active===t.id?600:400,transition:"all 0.15s"}}>{t.label}</button>))}
+</div>);}
 
 function App() {
-  const [k, setK] = useState(2);
-  const [n, setN] = useState(3);
-  const [maxN, setMaxN] = useState(14);
-  const [tab, setTab] = useState("story");
+  const [k,setK]=useState(2),[n,setN]=useState(3),[maxN,setMaxN]=useState(14),[tab,setTab]=useState("story");
+  const d=useMemo(()=>metallicMean(k),[k]);
+  const seq=useMemo(()=>sequenceS(k,maxN),[k,maxN]);
+  const seqBig=useMemo(()=>sequenceSBig(k,maxN),[k,maxN]);
+  const [chartW,setChartW]=useState(Math.min(580,window.innerWidth-80));
+  useEffect(()=>{const h=()=>setChartW(Math.min(580,window.innerWidth-80));window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);
 
-  const d = useMemo(() => metallicMean(k), [k]);
-  const seq = useMemo(() => sequenceS(k, maxN), [k, maxN]);
-  const seqBig = useMemo(() => sequenceSBig(k, maxN), [k, maxN]);
+  const chartData=useMemo(()=>Array.from({length:maxN},(_,i)=>{
+    const idx=i+1, mod4=mod4Big(seqBig[idx]), S=seq[idx], M=(S-2)/4, works=validExponent(k,idx);
+    return {n:idx,S,mod4,M,works,y:d**(-idx),logx:idx*Math.log(d),logy:-idx*Math.log(d)};
+  }),[seq,seqBig,maxN,k,d]);
 
-  // Responsive chart width
-  const [chartW, setChartW] = useState(Math.min(580, window.innerWidth - 80));
-  useEffect(() => {
-    const onResize = () => setChartW(Math.min(580, window.innerWidth - 80));
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
+  const currentMod4=mod4Big(seqBig[n]), currentS=seq[n], currentM=currentS!=null?(currentS-2)/4:NaN;
+  const currentWorks=validExponent(k,n), currentY=d**(-n);
+  const mod4Color=useCallback(d=>d.mod4===2?"#4ec9b0":"rgba(220,80,80,0.7)",[]);
+  const worksColor=useCallback(d=>d.works?"#e8c46a":"rgba(255,255,255,0.15)",[]);
+  const metalName=METALS.find(m=>m.k===k)?.name||("k="+k), isEven=k%2===0;
+  const bigM=seqBig[n]!=null?(seqBig[n]-2n)/4n:null;
 
-  const chartData = useMemo(() => {
-    return Array.from({ length: maxN }, (_, i) => {
-      const idx = i + 1;
-      const S = seq[idx];
-      const mod4 = ((S % 4) + 4) % 4;
-      const M = (S - 2) / 4;
-      const works = validExponent(k, idx);
-      return { n: idx, S, mod4, M, works, y: d ** (-idx),
-               logx: idx * Math.log(d), logy: -idx * Math.log(d) };
-    });
-  }, [seq, maxN, k, d]);
+  return (<div style={{maxWidth:780,margin:"0 auto"}}>
+    <header style={{marginBottom:18}}>
+      <p style={{fontFamily:"var(--mono)",fontSize:"0.67rem",color:"var(--accent)",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:3}}>Interactive toggle learner</p>
+      <h1 style={{fontFamily:"var(--serif)",fontSize:"clamp(1.4rem,4vw,2.1rem)",fontWeight:700,lineHeight:1.2,marginBottom:6}}>From an Idle Observation to a Sequence Generator</h1>
+      <p style={{fontSize:"0.85rem",color:"var(--text-dim)",maxWidth:620,lineHeight:1.6}}>
+        Companion interactive for the working paper <a href="./paper.html" style={{color:"#e8c46a"}}>"Metallic Means and Differences of Consecutive Square Roots"</a>. Toggle through the pedagogical arc: observation, sequence, inverse problem, generator, recurrence, theorem.
+      </p>
+    </header>
 
-  const currentS = seq[n];
-  const currentM = currentS !== undefined ? (currentS - 2) / 4 : NaN;
-  const currentWorks = validExponent(k, n);
-  const currentY = d ** (-n);
-
-  const mod4Color = useCallback(d => d.mod4 === 2 ? "#4ec9b0" : "rgba(220,80,80,0.7)", []);
-  const worksColor = useCallback(d => d.works ? "#e8c46a" : "rgba(255,255,255,0.15)", []);
-
-  const metalName = METALS.find(m => m.k === k)?.name || ("k=" + k);
-  const isEven = k % 2 === 0;
-
-  const bigM = seqBig[n] !== undefined ? (seqBig[n] - 2n) / 4n : null;
-
-  return (
-    <div style={{ maxWidth: 820, margin: "0 auto" }}>
-
-      {/* Header */}
-      <header style={{ marginBottom: 32 }}>
-        <p style={{ fontFamily: "var(--mono)", fontSize: "0.72rem", color: "var(--accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-          Interactive toggle learner
-        </p>
-        <h1 style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 700, lineHeight: 1.2, marginBottom: 10 }}>
-          From an Idle Observation to a Sequence Generator
-        </h1>
-        <p style={{ fontSize: "0.95rem", color: "var(--text-dim)", maxWidth: 640, lineHeight: 1.7 }}>
-          Companion interactive for the working paper <a href="./paper.html" style={{color: "#e8c46a"}}>"Metallic Means and Differences of Consecutive Square Roots"</a>. Toggle through the pedagogical arc: observation, sequence, inverse problem, generator, recurrence, theorem.
-        </p>
-      </header>
-
-      {/* Metal selector */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-        {METALS.map(m => <MetalButton key={m.k} metal={m} active={k === m.k} onClick={() => setK(m.k)} />)}
+    {/* Compact control strip */}
+    <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center",marginBottom:12}}>
+      <div style={{display:"flex",flexWrap:"wrap",gap:3}}>
+        {METALS.map(m=><MetalBtn key={m.k} m={m} active={k===m.k} onClick={()=>setK(m.k)} />)}
       </div>
-
-      {/* Controls */}
-      <div style={{ background: "var(--surface)", borderRadius: 10, padding: 16, marginBottom: 24, border: "1px solid rgba(255,255,255,0.06)" }}>
-        <RangeSlider value={n} onChange={setN} min={1} max={Math.min(maxN, 24)} label="exponent n" />
-        <RangeSlider value={maxN} onChange={setMaxN} min={6} max={24} label="table depth" />
-      </div>
-
-      {/* Live readout */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 28 }}>
-        <div className="val-card">
-          <div style={{ fontFamily: "var(--mono)", fontSize: "0.72rem", color: "var(--text-dim)", marginBottom: 4 }}>metallic mean</div>
-          <div style={{ fontFamily: "var(--serif)", fontSize: "1.3rem" }}>
-            <Tex>{`\\delta_{${k}} \\approx ${fmt(d, 5)}`}</Tex>
-          </div>
-        </div>
-        <div className="val-card">
-          <div style={{ fontFamily: "var(--mono)", fontSize: "0.72rem", color: "var(--text-dim)", marginBottom: 4 }}>reciprocal power</div>
-          <div style={{ fontFamily: "var(--serif)", fontSize: "1.3rem" }}>
-            <Tex>{`\\delta_{${k}}^{-${n}} \\approx ${fmt(currentY, 8)}`}</Tex>
-          </div>
-        </div>
-        <div className="val-card">
-          <div style={{ fontFamily: "var(--mono)", fontSize: "0.72rem", color: "var(--text-dim)", marginBottom: 4 }}>generator candidate</div>
-          <div style={{ fontFamily: "var(--serif)", fontSize: "1.3rem" }}>
-            <Tex>{`M_{${n}} = ${currentWorks && bigM !== null ? bigToStr(bigM) : "\\text{not integer}"}`}</Tex>
-          </div>
-          <div style={{
-            marginTop: 6, fontSize: "0.78rem", fontFamily: "var(--mono)",
-            color: currentWorks ? "#4ec9b0" : "rgba(220,80,80,0.7)"
-          }}>
-            {currentWorks
-              ? "\u221A" + fmt(currentM + 1, 0) + " \u2212 \u221A" + fmt(currentM, 0) + " works"
-              : "S\u2099 mod 4 \u2261 " + (((currentS % 4) + 4) % 4) + " \u2260 2"}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <TabBar
-        tabs={[
-          { id: "story", label: "Pedagogical Arc" },
-          { id: "algebra", label: "Derivation" },
-          { id: "graphs", label: "Graphs" },
-          { id: "table", label: "Table" },
-        ]}
-        active={tab} onChange={setTab}
-      />
-
-      {/* ── STORY ─────────────────────────────────────────────── */}
-      {tab === "story" && <div>
-        <Toggle title="1. The idle observation" defaultOpen={true} accent={true} badge="hook">
-          <p>Consider the silver ratio reciprocal. Its successive powers produce something uncanny:</p>
-          <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^2 = \\sqrt{9} - \\sqrt{8}`}</Tex></div>
-          <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^3 = \\sqrt{50} - \\sqrt{49}`}</Tex></div>
-          <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^4 = \\sqrt{289} - \\sqrt{288}`}</Tex></div>
-          <p>Every power seems to equal the difference of square roots of <em>consecutive</em> integers. The integers under the roots grow fast. Where do they come from? Is there a pattern, or is this a coincidence that breaks at some point?</p>
-          <p className="note">This is the starting point of the original McMurmerings blog post and §1 of the working paper. Try setting k = 2 and moving the exponent slider to see these values appear in the live readout above.</p>
-        </Toggle>
-
-        <Toggle title="2. From observation to sequence" defaultOpen={true} badge="data">
-          <p>Read off the integers under the square roots. Call the smaller one <Tex>{"M_n"}</Tex>. For the silver ratio:</p>
-          <div className="math-block"><Tex display={true}>{`M_1 = 1,\\quad M_2 = 8,\\quad M_3 = 49,\\quad M_4 = 288,\\quad M_5 = 1681,\\quad \\ldots`}</Tex></div>
-          <p>This is OEIS A001108. The recursive formula is <Tex>{"M_{n+1} = 6M_n - M_{n-1} + 2"}</Tex>. But where does that recurrence come from? Can we <em>derive</em> it rather than guess it?</p>
-          <p>The key pedagogical move: instead of asking "is there a pattern?", ask the student to solve the <em>inverse problem</em>.</p>
-        </Toggle>
-
-        <Toggle title="3. The inverse problem: recover M from y" badge="question">
-          <p>Suppose some number <Tex>{"y \\in (0,1)"}</Tex> happens to equal <Tex>{"\\sqrt{M+1} - \\sqrt{M}"}</Tex>. Can we solve for <Tex>{"M"}</Tex> in terms of <Tex>{"y"}</Tex>?</p>
-          <p>Rationalise the denominator by noting that <Tex>{"1/y = \\sqrt{M+1} + \\sqrt{M}"}</Tex>. Now add and subtract:</p>
-          <div className="math-block"><Tex display={true}>{`y + \\frac{1}{y} = 2\\sqrt{M+1}, \\qquad \\frac{1}{y} - y = 2\\sqrt{M}`}</Tex></div>
-          <p>Square either equation and solve. The result is clean:</p>
-          <div className="math-block"><Tex display={true}>{`M = \\frac{y^{-2} + y^{2} - 2}{4}`}</Tex></div>
-          <p>This is the <strong>generator formula</strong> (equation (4) of the working paper, §3). Given any <Tex>{"y"}</Tex>, it produces the unique candidate <Tex>{"M"}</Tex>. The representation works if and only if <Tex>{"M"}</Tex> is a non-negative integer.</p>
-        </Toggle>
-
-        <Toggle title="4. Substitute the metallic mean" badge="generator">
-          <p>Now set <Tex>{`y = \\delta_k^{-n}`}</Tex> where <Tex>{`\\delta_k = (k + \\sqrt{k^2+4})/2`}</Tex>. The generator becomes:</p>
-          <div className="math-block"><Tex display={true}>{`M_n(k) = \\frac{\\delta_k^{2n} + \\delta_k^{-2n} - 2}{4} = \\frac{S_n(k) - 2}{4}`}</Tex></div>
-          <p>where <Tex>{`S_n(k) = \\delta_k^{2n} + \\delta_k^{-2n}`}</Tex> is a Lucas-type trace sequence satisfying</p>
-          <div className="math-block"><Tex display={true}>{`S_{n+1} = (k^2+2)\\,S_n - S_{n-1}, \\qquad S_0 = 2,\\; S_1 = k^2+2`}</Tex></div>
-          <p>The blog post derived this for k = 2 by brute-force binomial expansion and spreadsheet pattern hunting. The working paper (§4) shows the cleaner route: the generator formula plus the recurrence give everything at once.</p>
-        </Toggle>
-
-        <Toggle title="5. When is M an integer? The parity theorem" badge="theorem">
-          <p><Tex>{"M_n(k)"}</Tex> is an integer exactly when <Tex>{"S_n \\equiv 2 \\pmod{4}"}</Tex>. Reduce the recurrence mod 4:</p>
-          <p><strong>k even:</strong> Then <Tex>{"k^2 + 2 \\equiv 2"}</Tex> mod 4. Since <Tex>{"S_0 \\equiv S_1 \\equiv 2"}</Tex> mod 4, induction locks the sequence at 2 forever. Every exponent works.</p>
-          <p><strong>k odd:</strong> Then <Tex>{"k^2 + 2 \\equiv 3"}</Tex> mod 4. The recurrence mod 4 cycles with period 3:</p>
-          <div className="math-block"><Tex display={true}>{`S_n \\bmod 4: \\quad 2,\\; 3,\\; 3,\\; 2,\\; 3,\\; 3,\\; 2,\\; 3,\\; 3,\\; \\ldots`}</Tex></div>
-          <p>So <Tex>{"M_n"}</Tex> is an integer only when <Tex>{"3 \\mid n"}</Tex>. This is Theorem 1 of the working paper (§5). Toggle to the <strong>Graphs</strong> tab and switch between even and odd k values to see this visually.</p>
-        </Toggle>
-
-        <Toggle title="6. Why period 3? The cyclotomic perspective" badge="deep">
-          <p>The characteristic polynomial of the recurrence mod 4 is <Tex>{"x^2 - (k^2+2)x + 1"}</Tex>. For odd k this reduces to <Tex>{"x^2 + x + 1 \\pmod{4}"}</Tex>, which is the minimal polynomial of primitive cube roots of unity. Since <Tex>{"x^2+x+1"}</Tex> divides <Tex>{"x^3 - 1"}</Tex>, the linear action has order 3 in the mod-4 quotient.</p>
-          <p>The other face of this duality is Minkowskian: the conjugate pair <Tex>{"(\\delta_k^n, \\delta_k^{-n})"}</Tex> lives on the hyperbola <Tex>{"xy = 1"}</Tex>. In log-coordinates, the orbit is an arithmetic progression on the line <Tex>{"v = -u"}</Tex>. Only every third step lands in the right congruence class.</p>
-        </Toggle>
-      </div>}
-
-      {/* ── ALGEBRA ───────────────────────────────────────────── */}
-      {tab === "algebra" && <div>
-        <Toggle title="Derive M from y = \u221A(M+1) \u2212 \u221AM" defaultOpen={true}>
-          <p>Start from the identity. If <Tex>{"y = \\sqrt{M+1} - \\sqrt{M}"}</Tex> then rationalising gives <Tex>{"1/y = \\sqrt{M+1} + \\sqrt{M}"}</Tex>.</p>
-          <div className="math-block"><Tex display={true}>{`\\text{Add: } y + \\frac{1}{y} = 2\\sqrt{M+1} \\implies M+1 = \\frac{1}{4}\\left(y + \\frac{1}{y}\\right)^2`}</Tex></div>
-          <div className="math-block"><Tex display={true}>{`\\text{Subtract: } \\frac{1}{y} - y = 2\\sqrt{M} \\implies M = \\frac{1}{4}\\left(\\frac{1}{y} - y\\right)^2`}</Tex></div>
-          <p>Expanding the second form: <Tex>{"M = (y^{-2} + y^2 - 2)/4"}</Tex>. This is equation (2) in the paper.</p>
-        </Toggle>
-
-        <Toggle title="The Lucas-type recurrence for S\u2099" defaultOpen={true}>
-          <p>Let <Tex>{`\\lambda_k = \\delta_k^2 = k\\delta_k + 1`}</Tex>. Then <Tex>{`\\lambda_k + \\lambda_k^{-1} = k^2 + 2`}</Tex>, so <Tex>{`S_n = \\lambda_k^n + \\lambda_k^{-n}`}</Tex> satisfies the second-order recurrence:</p>
-          <div className="math-block"><Tex display={true}>{`S_{n+1} = (k^2+2)\\,S_n - S_{n-1}`}</Tex></div>
-          <p>with <Tex>{"S_0 = 2"}</Tex> and <Tex>{`S_1 = k^2 + 2`}</Tex>. Since the coefficients and initial values are integers, <Tex>{"S_n \\in \\mathbb{Z}"}</Tex> for all n. The integrality question for <Tex>{"M_n = (S_n - 2)/4"}</Tex> reduces to a congruence: <Tex>{"S_n \\equiv 2 \\pmod 4"}</Tex>.</p>
-        </Toggle>
-
-        <Toggle title="The generator recurrence">
-          <p>Since <Tex>{"S_n = 4M_n + 2"}</Tex>, substituting into the <Tex>{"S_n"}</Tex> recurrence gives:</p>
-          <div className="math-block"><Tex display={true}>{`M_{n+1} = (k^2+2)\\,M_n - M_{n-1} + \\frac{k^2}{2}`}</Tex></div>
-          <p>This is an integer recurrence when k is even (so <Tex>{"k^2/2 \\in \\mathbb{Z}"}</Tex>). For odd k, the recurrence applies to the subsequence <Tex>{"n = 3m"}</Tex>.</p>
-          <p>For the silver ratio (k = 2): <Tex>{"M_{n+1} = 6M_n - M_{n-1} + 2"}</Tex>, matching OEIS A001108.</p>
-        </Toggle>
-
-        <Toggle title="The blog post's original generator">
-          <p>The McMurmerings post derived the generating function for k = 2 by binomial expansion and spreadsheet experimentation, arriving at:</p>
-          <div className="math-block"><Tex display={true}>{`P_n = \\frac{1}{4a^n}(1 - a^{2n} - 2a^n), \\qquad a = (\\sqrt{2}-1)^2 = 3 - 2\\sqrt{2}`}</Tex></div>
-          <p>This is equivalent to the paper's formula <Tex>{"M_n = (\\delta_2^{2n} + \\delta_2^{-2n} - 2)/4"}</Tex>. Set <Tex>{"a = \\delta_2^{-2}"}</Tex> and the two expressions are identical. The blog arrived at the same destination by a more computational route; the paper's algebraic route makes the generalisation to all k immediate.</p>
-        </Toggle>
-
-        <Toggle title="Quadratic field perspective">
-          <p>Let <Tex>{`K = \\mathbb{Q}(\\sqrt{D})`}</Tex> where <Tex>{`D = k^2 + 4`}</Tex>. The even/odd dichotomy traces to the ring of integers:</p>
-          <p>When k is even, <Tex>{"D \\equiv 0 \\pmod 4"}</Tex> and <Tex>{`\\mathcal{O}_K = \\mathbb{Z}[\\sqrt{D}]`}</Tex>. Traces land cleanly in <Tex>{"\\mathbb{Z}"}</Tex> with no denominator issues.</p>
-          <p>When k is odd, <Tex>{"D \\equiv 1 \\pmod 4"}</Tex> and <Tex>{`\\mathcal{O}_K = \\mathbb{Z}[(1+\\sqrt{D})/2]`}</Tex>. The half-integer lattice introduces the period-3 oscillation in the mod-4 projection.</p>
-        </Toggle>
-      </div>}
-
-      {/* ── GRAPHS ────────────────────────────────────────────── */}
-      {tab === "graphs" && <div>
-        <Toggle title={`S\u2099 mod 4 for ${metalName} (k = ${k})`} defaultOpen={true}>
-          <p style={{ marginBottom: 8, fontSize: "0.85rem", color: "var(--text-dim)" }}>
-            <span style={{ color: "#4ec9b0" }}>Teal</span> = <Tex>{"S_n \\equiv 2"}</Tex> (generator works).{" "}
-            <span className="fails">Red</span> = fails.{" "}
-            {isEven ? "All points are teal: every exponent works." : "Period-3 pattern: only every third exponent is teal."}
-          </p>
-          <CanvasChart data={chartData} xKey="n" yKey="mod4" labelX="n" labelY="S\u2099 mod 4"
-            highlight={n} highlightColor="#e8c46a" colorFn={mod4Color} width={chartW} height={200} />
-        </Toggle>
-
-        <Toggle title={`Generator M\u2099 for ${metalName} (k = ${k})`} defaultOpen={true}>
-          <p style={{ marginBottom: 8, fontSize: "0.85rem", color: "var(--text-dim)" }}>
-            Gold dots mark valid generators (integer M). The sequence grows exponentially.
-          </p>
-          <CanvasChart data={chartData} xKey="n" yKey="M" labelX="n" labelY="M\u2099" logScale={true}
-            highlight={n} highlightColor="#e8c46a" colorFn={worksColor} width={chartW} height={260} />
-        </Toggle>
-
-        <Toggle title="Log-space hyperbola orbit">
-          <p style={{ marginBottom: 8, fontSize: "0.85rem", color: "var(--text-dim)" }}>
-            Points <Tex>{"(u,v) = (n\\log\\delta_k,\\, -n\\log\\delta_k)"}</Tex> on the line <Tex>{"v = -u"}</Tex>.
-            This is the hyperbola <Tex>{"xy = 1"}</Tex> in log-coordinates. The consecutive-square-root condition is a congruence on <Tex>{"x^2 + y^2"}</Tex> along this orbit.
-          </p>
-          <CanvasChart data={chartData} xKey="logx" yKey="logy" labelX="u = n log \u03B4\u2096" labelY="v = \u2212n log \u03B4\u2096"
-            highlight={null} colorFn={worksColor} width={chartW} height={280} />
-          <p className="note">Gold points have integer generators. For odd k, notice only every third point along the line is gold.</p>
-        </Toggle>
-      </div>}
-
-      {/* ── TABLE ─────────────────────────────────────────────── */}
-      {tab === "table" && <div style={{ overflowX: "auto", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
-        <table>
-          <thead><tr>
-            <th>n</th>
-            <th><Tex>{"\\delta_k^{-n}"}</Tex></th>
-            <th><Tex>{"S_n"}</Tex></th>
-            <th><Tex>{"S_n"}</Tex> mod 4</th>
-            <th><Tex>{"M_n"}</Tex></th>
-            <th>status</th>
-          </tr></thead>
-          <tbody>
-            {chartData.map(row => (
-              <tr key={row.n} className={row.n === n ? "hl" : ""}>
-                <td>{row.n}</td>
-                <td>{fmt(row.y, 6)}</td>
-                <td>{bigToStr(seqBig[row.n])}</td>
-                <td>{row.mod4}</td>
-                <td style={{ color: row.works ? "#4ec9b0" : "var(--text-dim)" }}>
-                  {row.works ? bigToStr((seqBig[row.n] - 2n) / 4n) : "\u2014"}
-                </td>
-                <td>
-                  {row.works
-                    ? <span className="works">{"\u221A"}{fmt(row.M + 1, 0)} {"\u2212"} {"\u221A"}{fmt(row.M, 0)}</span>
-                    : <span className="fails">fails</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>}
-
-      {/* Footer */}
-      <div style={{ marginTop: 40, padding: "16px 0", borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: "0.78rem", color: "var(--text-dim)" }}>
-        <p>
-          Companion interactive for the working paper{" "}
-          <a href="./paper.html">
-            "Metallic Means and Differences of Consecutive Square Roots"
-          </a>.{" "}
-          The paper's §1 traces the route from the original{" "}
-          <a href="https://mcmurmerings.wordpress.com/2022/10/23/generating-function-for-sequence-from-compound-surd-power-expansion/">
-            McMurmerings blog post
-          </a>{" "}
-          (spreadsheet-driven, silver ratio only) to the general algebraic derivation.
-          Each toggle above corresponds to a section of the paper: toggle 3 is §3, toggle 4 is §4, toggle 5 is §5, and toggle 6 is §§9{"\u2013"}10.
-        </p>
+      <div style={{flex:"1 1 220px",minWidth:180,background:"var(--surface)",borderRadius:6,padding:"6px 10px",border:"1px solid rgba(255,255,255,0.05)"}}>
+        <Slider value={n} onChange={setN} min={1} max={Math.min(maxN,24)} label="n" />
+        <Slider value={maxN} onChange={setMaxN} min={6} max={24} label="depth" />
       </div>
     </div>
-  );
+
+    {/* Live readout */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:8,marginBottom:14}}>
+      <div className="val-card">
+        <div style={{fontFamily:"var(--mono)",fontSize:"0.63rem",color:"var(--text-dim)",marginBottom:2}}>metallic mean</div>
+        <div style={{fontFamily:"var(--serif)",fontSize:"1.1rem"}}><Tex>{`\\delta_{${k}} \\approx ${fmt(d,5)}`}</Tex></div>
+      </div>
+      <div className="val-card">
+        <div style={{fontFamily:"var(--mono)",fontSize:"0.63rem",color:"var(--text-dim)",marginBottom:2}}>reciprocal power</div>
+        <div style={{fontFamily:"var(--serif)",fontSize:"1.1rem"}}><Tex>{`\\delta_{${k}}^{-${n}} \\approx ${fmt(currentY,8)}`}</Tex></div>
+      </div>
+      <div className="val-card">
+        <div style={{fontFamily:"var(--mono)",fontSize:"0.63rem",color:"var(--text-dim)",marginBottom:2}}>generator candidate</div>
+        <div style={{fontFamily:"var(--serif)",fontSize:"1.1rem"}}><Tex>{`M_{${n}} = ${currentWorks&&bigM!=null?bigToStr(bigM):"\\text{not integer}"}`}</Tex></div>
+        <div style={{marginTop:2,fontSize:"0.7rem",fontFamily:"var(--mono)",color:currentWorks?"#4ec9b0":"rgba(220,80,80,0.7)"}}>
+          {currentWorks?"\u221A"+fmt(currentM+1,0)+" \u2212 \u221A"+fmt(currentM,0)+" works":"S\u2099 mod 4 \u2261 "+currentMod4+" \u2260 2"}
+        </div>
+      </div>
+    </div>
+
+    <TabBar tabs={[{id:"story",label:"Pedagogical Arc"},{id:"algebra",label:"Derivation"},{id:"graphs",label:"Graphs"},{id:"table",label:"Table"}]} active={tab} onChange={setTab} />
+
+    {/* STORY */}
+    {tab==="story"&&<div>
+      <Toggle title="1. The idle observation" defaultOpen={true} accent={true} badge="hook">
+        <p>Consider the silver ratio reciprocal. Its successive powers produce something uncanny:</p>
+        <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^2 = \\sqrt{9} - \\sqrt{8}`}</Tex></div>
+        <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^3 = \\sqrt{50} - \\sqrt{49}`}</Tex></div>
+        <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^4 = \\sqrt{289} - \\sqrt{288}`}</Tex></div>
+        <p>Every power seems to equal the difference of square roots of <em>consecutive</em> integers. The integers under the roots grow fast. Where do they come from?</p>
+        <p className="note">This is the starting point of §1 of the <a href="./paper.html">working paper</a>. Try setting k = 2 and moving the exponent slider to see these values in the live readout above.</p>
+      </Toggle>
+      <Toggle title="2. From observation to sequence" defaultOpen={true} badge="data">
+        <p>Read off the integers under the square roots. Call the smaller one <Tex>{"M_n"}</Tex>. For the silver ratio:</p>
+        <div className="math-block"><Tex display={true}>{`M_1 = 1,\\; M_2 = 8,\\; M_3 = 49,\\; M_4 = 288,\\; M_5 = 1681,\\; \\ldots`}</Tex></div>
+        <p>This is <a href="https://oeis.org/A001108">OEIS A001108</a>. The recursive formula is <Tex>{"M_{n+1} = 6M_n - M_{n-1} + 2"}</Tex>. But where does that recurrence come from? Can we <em>derive</em> it rather than guess it?</p>
+        <p>The key move: instead of asking "is there a pattern?", try to solve the <em>inverse problem</em> yourself.</p>
+      </Toggle>
+      <Toggle title="3. The inverse problem: recover M from y" badge="question">
+        <p>Suppose <Tex>{"y \\in (0,1)"}</Tex> equals <Tex>{"\\sqrt{M+1} - \\sqrt{M}"}</Tex>. Can you solve for <Tex>{"M"}</Tex>?</p>
+        <p>Rationalise: <Tex>{"1/y = \\sqrt{M+1} + \\sqrt{M}"}</Tex>. Add and subtract:</p>
+        <div className="math-block"><Tex display={true}>{`y + \\frac{1}{y} = 2\\sqrt{M+1}, \\qquad \\frac{1}{y} - y = 2\\sqrt{M}`}</Tex></div>
+        <p>Square and solve:</p>
+        <div className="math-block"><Tex display={true}>{`M = \\frac{y^{-2} + y^{2} - 2}{4}`}</Tex></div>
+        <p>This is the <strong>generator formula</strong> (equation (4) of the <a href="./paper.html#s3">working paper, §3</a>). Given any <Tex>{"y"}</Tex>, it produces the unique candidate <Tex>{"M"}</Tex>. The representation works if and only if <Tex>{"M"}</Tex> is a non-negative integer.</p>
+      </Toggle>
+      <Toggle title="4. Substitute the metallic mean" badge="generator">
+        <p>Set <Tex>{`y = \\delta_k^{-n}`}</Tex> where <Tex>{`\\delta_k = (k + \\sqrt{k^2+4})/2`}</Tex>. The generator becomes:</p>
+        <div className="math-block"><Tex display={true}>{`M_n(k) = \\frac{S_n(k) - 2}{4}, \\qquad S_n = \\delta_k^{2n} + \\delta_k^{-2n}`}</Tex></div>
+        <p>and <Tex>{"S_n"}</Tex> satisfies the Lucas-type recurrence <Tex>{`S_{n+1} = (k^2+2)S_n - S_{n-1}`}</Tex>. The <a href="./paper.html#s4">working paper (§4)</a> shows how the generator formula plus the recurrence give everything at once, generalising the silver-ratio case to all metallic means.</p>
+      </Toggle>
+      <Toggle title="5. When is M an integer? The parity theorem" badge="theorem">
+        <p><Tex>{"M_n(k)"}</Tex> is an integer exactly when <Tex>{"S_n \\equiv 2 \\pmod{4}"}</Tex>. Reduce the recurrence mod 4:</p>
+        <p><strong>k even:</strong> <Tex>{"k^2+2 \\equiv 2"}</Tex> mod 4. Induction locks <Tex>{"S_n \\equiv 2"}</Tex> forever. Every exponent works.</p>
+        <p><strong>k odd:</strong> <Tex>{"k^2+2 \\equiv 3"}</Tex> mod 4. The sequence cycles: <Tex>{"2, 3, 3, 2, 3, 3, \\ldots"}</Tex></p>
+        <p>So <Tex>{"M_n"}</Tex> is an integer only when <Tex>{"3 \\mid n"}</Tex>. This is Theorem 1 of the <a href="./paper.html#s5">working paper (§5)</a>. Switch to the <strong>Graphs</strong> tab and toggle between even and odd k to see this.</p>
+      </Toggle>
+      <Toggle title="6. Why period 3? The cyclotomic perspective" badge="deep">
+        <p>For odd k, the characteristic polynomial mod 4 reduces to <Tex>{"x^2 + x + 1"}</Tex>, the minimal polynomial of primitive cube roots of unity. Since it divides <Tex>{"x^3 - 1"}</Tex>, the action has order 3 in the mod-4 quotient.</p>
+        <p>The dual face is Minkowskian: the conjugate pair <Tex>{"(\\delta_k^n, \\delta_k^{-n})"}</Tex> lives on <Tex>{"xy = 1"}</Tex>. In log-coordinates, the orbit is arithmetic on <Tex>{"v = -u"}</Tex>. Only every third step lands in the right congruence class.</p>
+      </Toggle>
+    </div>}
+
+    {/* ALGEBRA */}
+    {tab==="algebra"&&<div>
+      <Toggle title="Derive M from y = \u221A(M+1) \u2212 \u221AM" defaultOpen={true}>
+        <p>If <Tex>{"y = \\sqrt{M+1} - \\sqrt{M}"}</Tex> then <Tex>{"1/y = \\sqrt{M+1} + \\sqrt{M}"}</Tex>.</p>
+        <div className="math-block"><Tex display={true}>{`\\text{Add: } y + \\tfrac{1}{y} = 2\\sqrt{M+1} \\implies M+1 = \\tfrac{1}{4}(y + \\tfrac{1}{y})^2`}</Tex></div>
+        <div className="math-block"><Tex display={true}>{`\\text{Subtract: } \\tfrac{1}{y} - y = 2\\sqrt{M} \\implies M = \\tfrac{1}{4}(\\tfrac{1}{y} - y)^2`}</Tex></div>
+        <p>Expanding: <Tex>{"M = (y^{-2}+y^2-2)/4"}</Tex>. This is equation (4) in the <a href="./paper.html#s3">paper</a>.</p>
+      </Toggle>
+      <Toggle title="The Lucas-type recurrence for S\u2099" defaultOpen={true}>
+        <p>Let <Tex>{`\\lambda_k=\\delta_k^2`}</Tex>. Then <Tex>{`\\lambda_k+\\lambda_k^{-1}=k^2+2`}</Tex>, so <Tex>{`S_n=\\lambda_k^n+\\lambda_k^{-n}`}</Tex> satisfies:</p>
+        <div className="math-block"><Tex display={true}>{`S_{n+1}=(k^2+2)S_n - S_{n-1}, \\quad S_0=2,\\;S_1=k^2+2`}</Tex></div>
+        <p>Integrality of <Tex>{"M_n=(S_n-2)/4"}</Tex> reduces to <Tex>{"S_n \\equiv 2 \\pmod 4"}</Tex>.</p>
+      </Toggle>
+      <Toggle title="The generator recurrence">
+        <p>Since <Tex>{"S_n=4M_n+2"}</Tex>, substitution gives:</p>
+        <div className="math-block"><Tex display={true}>{`M_{n+1}=(k^2+2)M_n - M_{n-1} + k^2/2`}</Tex></div>
+        <p>Integer recurrence when k even. For k = 2: <Tex>{"M_{n+1}=6M_n-M_{n-1}+2"}</Tex>, matching <a href="https://oeis.org/A001108">OEIS A001108</a>.</p>
+      </Toggle>
+      <Toggle title="Equivalence with the original generator">
+        <p>The <a href="https://mcmurmerings.wordpress.com/2022/10/23/generating-function-for-sequence-from-compound-surd-power-expansion/">McMurmerings post</a> found for k = 2:</p>
+        <div className="math-block"><Tex display={true}>{`P_n = \\frac{1-a^{2n}-2a^n}{4a^n},\\quad a=(\\sqrt{2}-1)^2`}</Tex></div>
+        <p>Set <Tex>{"a=\\delta_2^{-2}"}</Tex> and this is identical to <Tex>{"M_n=(\\delta_2^{2n}+\\delta_2^{-2n}-2)/4"}</Tex>. The algebraic route in the <a href="./paper.html">working paper</a> makes the generalisation to all k immediate.</p>
+      </Toggle>
+      <Toggle title="Quadratic field perspective">
+        <p>Let <Tex>{`D=k^2+4`}</Tex>. When k even, <Tex>{"D\\equiv 0\\pmod 4"}</Tex> and <Tex>{`\\mathcal{O}_K=\\mathbb{Z}[\\sqrt{D}]`}</Tex>: traces land cleanly in <Tex>{"\\mathbb{Z}"}</Tex>.</p>
+        <p>When k odd, <Tex>{"D\\equiv 1\\pmod 4"}</Tex> and <Tex>{`\\mathcal{O}_K=\\mathbb{Z}[(1+\\sqrt{D})/2]`}</Tex>. The half-integer lattice forces the period-3 oscillation.</p>
+      </Toggle>
+    </div>}
+
+    {/* GRAPHS */}
+    {tab==="graphs"&&<div>
+      <div style={{marginBottom:10,padding:"8px 12px",background:"var(--surface)",borderRadius:6,border:"1px solid rgba(255,255,255,0.05)",fontSize:"0.8rem",lineHeight:1.65}}>
+        <p style={{marginBottom:3}}>
+          <strong style={{color:"var(--accent)"}}>Reading the colours.</strong>{" "}
+          <Tex>{"S_n \\bmod 4"}</Tex> takes values in <Tex>{"\\{0,1,2,3\\}"}</Tex>. The generator <Tex>{"M_n=(S_n-2)/4"}</Tex> is an integer exactly when <Tex>{"S_n \\equiv 2"}</Tex>.
+          Points where this holds are <span style={{color:"#4ec9b0",fontWeight:600}}>teal</span>; where it fails, <span style={{color:"rgba(220,80,80,0.85)",fontWeight:600}}>red</span>.
+        </p>
+        <p style={{marginBottom:0}}>
+          <strong style={{color:"var(--accent)"}}>The even/odd split.</strong>{" "}
+          For even k (Silver, Copper, Tin) every point is teal. For odd k (Golden, Bronze, Nickel) the pattern is period-3: teal, red, red. Only exponents divisible by 3 work. Switch between metals to see the contrast.
+        </p>
+      </div>
+      <Toggle title={`S\u2099 mod 4 for ${metalName} (k = ${k})`} defaultOpen={true}>
+        <CanvasChart data={chartData} xKey="n" yKey="mod4" labelX="n" labelY="S\u2099 mod 4" highlight={n} highlightColor="#e8c46a" colorFn={mod4Color} width={chartW} height={160} fixedYRange={[-0.3,3.8]} />
+      </Toggle>
+      <Toggle title={`Generator M\u2099 for ${metalName} (k = ${k})`} defaultOpen={true}>
+        <CanvasChart data={chartData} xKey="n" yKey="M" labelX="n" labelY="M\u2099" logScale={true} highlight={n} highlightColor="#e8c46a" colorFn={worksColor} width={chartW} height={200} />
+      </Toggle>
+      <Toggle title="Log-space hyperbola orbit">
+        <p style={{marginBottom:6,fontSize:"0.8rem",color:"var(--text-dim)"}}>
+          Points <Tex>{"(u,v)=(n\\log\\delta_k,-n\\log\\delta_k)"}</Tex> on <Tex>{"v=-u"}</Tex>. Gold = integer generator. For odd k, only every third point is gold.
+        </p>
+        <CanvasChart data={chartData} xKey="logx" yKey="logy" labelX="u = n log \u03B4\u2096" labelY="v = \u2212n log \u03B4\u2096" highlight={null} colorFn={worksColor} width={chartW} height={220} />
+      </Toggle>
+    </div>}
+
+    {/* TABLE */}
+    {tab==="table"&&<div style={{overflowX:"auto",borderRadius:6,border:"1px solid rgba(255,255,255,0.06)"}}>
+      <table><thead><tr><th>n</th><th><Tex>{"\\delta_k^{-n}"}</Tex></th><th><Tex>{"S_n"}</Tex></th><th><Tex>{"S_n"}</Tex> mod 4</th><th><Tex>{"M_n"}</Tex></th><th>status</th></tr></thead>
+      <tbody>{chartData.map(row=>(<tr key={row.n} className={row.n===n?"hl":""}>
+        <td>{row.n}</td><td>{fmt(row.y,6)}</td><td>{bigToStr(seqBig[row.n])}</td><td>{row.mod4}</td>
+        <td style={{color:row.works?"#4ec9b0":"var(--text-dim)"}}>{row.works?bigToStr((seqBig[row.n]-2n)/4n):"\u2014"}</td>
+        <td>{row.works?<span className="works">{"\u221A"}{fmt(row.M+1,0)} {"\u2212"} {"\u221A"}{fmt(row.M,0)}</span>:<span className="fails">fails</span>}</td>
+      </tr>))}</tbody></table>
+    </div>}
+
+    <div style={{marginTop:28,padding:"10px 0",borderTop:"1px solid rgba(255,255,255,0.06)",fontSize:"0.72rem",color:"var(--text-dim)"}}>
+      <p>Companion interactive for <a href="./paper.html">"Metallic Means and Differences of Consecutive Square Roots"</a>. §1 of the paper traces the route from the <a href="https://mcmurmerings.wordpress.com/2022/10/23/generating-function-for-sequence-from-compound-surd-power-expansion/">McMurmerings blog post</a> to the general derivation. Each toggle corresponds to a paper section: 3→§3, 4→§4, 5→§5, 6→§§9–10.</p>
+    </div>
+  </div>);
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
+
 
 
 
