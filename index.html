@@ -326,7 +326,7 @@ function App() {
           From an Idle Observation to a Sequence Generator
         </h1>
         <p style={{ fontSize: "0.95rem", color: "var(--text-dim)", maxWidth: 640, lineHeight: 1.7 }}>
-          Powers of reciprocal metallic means sometimes equal the difference of square roots of consecutive integers. Start with examples, find the pattern, derive the generator, then prove the theorem.
+          Companion interactive for the working paper <a href="../metallic-means-paper/" style={{color: "#e8c46a"}}>"Metallic Means and Differences of Consecutive Square Roots"</a>. Toggle through the pedagogical arc: observation, sequence, inverse problem, generator, recurrence, theorem.
         </p>
       </header>
 
@@ -390,7 +390,7 @@ function App() {
           <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^3 = \\sqrt{50} - \\sqrt{49}`}</Tex></div>
           <div className="math-block"><Tex display={true}>{`(\\sqrt{2}-1)^4 = \\sqrt{289} - \\sqrt{288}`}</Tex></div>
           <p>Every power seems to equal the difference of square roots of <em>consecutive</em> integers. The integers under the roots grow fast. Where do they come from? Is there a pattern, or is this a coincidence that breaks at some point?</p>
-          <p className="note">This is the starting point of the original McMurmerings blog post. Try setting k = 2 and moving the exponent slider to see these values appear in the live readout above.</p>
+          <p className="note">This is the starting point of the original McMurmerings blog post and §1 of the working paper. Try setting k = 2 and moving the exponent slider to see these values appear in the live readout above.</p>
         </Toggle>
 
         <Toggle title="2. From observation to sequence" defaultOpen={true} badge="data">
@@ -406,7 +406,7 @@ function App() {
           <div className="math-block"><Tex display={true}>{`y + \\frac{1}{y} = 2\\sqrt{M+1}, \\qquad \\frac{1}{y} - y = 2\\sqrt{M}`}</Tex></div>
           <p>Square either equation and solve. The result is clean:</p>
           <div className="math-block"><Tex display={true}>{`M = \\frac{y^{-2} + y^{2} - 2}{4}`}</Tex></div>
-          <p>This is the <strong>generator formula</strong>. Given any <Tex>{"y"}</Tex>, it produces the unique candidate <Tex>{"M"}</Tex>. The representation works if and only if <Tex>{"M"}</Tex> is a non-negative integer.</p>
+          <p>This is the <strong>generator formula</strong> (equation (4) of the working paper, §3). Given any <Tex>{"y"}</Tex>, it produces the unique candidate <Tex>{"M"}</Tex>. The representation works if and only if <Tex>{"M"}</Tex> is a non-negative integer.</p>
         </Toggle>
 
         <Toggle title="4. Substitute the metallic mean" badge="generator">
@@ -414,7 +414,7 @@ function App() {
           <div className="math-block"><Tex display={true}>{`M_n(k) = \\frac{\\delta_k^{2n} + \\delta_k^{-2n} - 2}{4} = \\frac{S_n(k) - 2}{4}`}</Tex></div>
           <p>where <Tex>{`S_n(k) = \\delta_k^{2n} + \\delta_k^{-2n}`}</Tex> is a Lucas-type trace sequence satisfying</p>
           <div className="math-block"><Tex display={true}>{`S_{n+1} = (k^2+2)\\,S_n - S_{n-1}, \\qquad S_0 = 2,\\; S_1 = k^2+2`}</Tex></div>
-          <p>The blog post derived this for k = 2 by brute-force binomial expansion and spreadsheet pattern hunting. The paper shows the cleaner route: the generator formula plus the recurrence give everything at once.</p>
+          <p>The blog post derived this for k = 2 by brute-force binomial expansion and spreadsheet pattern hunting. The working paper (§4) shows the cleaner route: the generator formula plus the recurrence give everything at once.</p>
         </Toggle>
 
         <Toggle title="5. When is M an integer? The parity theorem" badge="theorem">
@@ -422,7 +422,7 @@ function App() {
           <p><strong>k even:</strong> Then <Tex>{"k^2 + 2 \\equiv 2"}</Tex> mod 4. Since <Tex>{"S_0 \\equiv S_1 \\equiv 2"}</Tex> mod 4, induction locks the sequence at 2 forever. Every exponent works.</p>
           <p><strong>k odd:</strong> Then <Tex>{"k^2 + 2 \\equiv 3"}</Tex> mod 4. The recurrence mod 4 cycles with period 3:</p>
           <div className="math-block"><Tex display={true}>{`S_n \\bmod 4: \\quad 2,\\; 3,\\; 3,\\; 2,\\; 3,\\; 3,\\; 2,\\; 3,\\; 3,\\; \\ldots`}</Tex></div>
-          <p>So <Tex>{"M_n"}</Tex> is an integer only when <Tex>{"3 \\mid n"}</Tex>. Toggle to the <strong>Graphs</strong> tab and switch between even and odd k values to see this visually.</p>
+          <p>So <Tex>{"M_n"}</Tex> is an integer only when <Tex>{"3 \\mid n"}</Tex>. This is Theorem 1 of the working paper (§5). Toggle to the <strong>Graphs</strong> tab and switch between even and odd k values to see this visually.</p>
         </Toggle>
 
         <Toggle title="6. Why period 3? The cyclotomic perspective" badge="deep">
@@ -532,16 +532,27 @@ function App() {
       {/* Footer */}
       <div style={{ marginTop: 40, padding: "16px 0", borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: "0.78rem", color: "var(--text-dim)" }}>
         <p>
-          Based on the McMurmerings blog post{" "}
+          Companion interactive for the working paper{" "}
+          <a href="../metallic-means-paper/">
+            "Metallic Means and Differences of Consecutive Square Roots"
+          </a>.{" "}
+          The paper's §1 traces the route from the original{" "}
           <a href="https://mcmurmerings.wordpress.com/2022/10/23/generating-function-for-sequence-from-compound-surd-power-expansion/">
-            "Generating function for nth-triangle is-a-square sequence"
+            McMurmerings blog post
           </a>{" "}
-          and the paper "Metallic Means and Differences of Consecutive Square Roots".
+          (spreadsheet-driven, silver ratio only) to the general algebraic derivation.
+          Each toggle above corresponds to a section of the paper: toggle 3 is §3, toggle 4 is §4, toggle 5 is §5, and toggle 6 is §§9{"\u2013"}10.
         </p>
       </div>
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
