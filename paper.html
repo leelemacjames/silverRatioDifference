@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metallic Means and Differences of Consecutive Square Roots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+<style>
+:root {
+  --bg: #0e1013;
+  --surface: #15171c;
+  --surface-raised: #1a1d23;
+  --border: rgba(255,255,255,0.07);
+  --border-accent: rgba(232,196,106,0.3);
+  --text: #d4d0c8;
+  --text-dim: rgba(212,208,200,0.5);
+  --text-muted: rgba(212,208,200,0.35);
+  --accent: #e8c46a;
+  --accent-dim: rgba(232,196,106,0.12);
+  --teal: #4ec9b0;
+  --teal-dim: rgba(78,201,176,0.12);
+  --red: #d4564e;
+  --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --sans: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', 'Menlo', 'Consolas', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+body {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ── Typography ──────────────────────────────────────── */
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.3em;
+}
+
+h1 em, h1 i {
+  font-style: italic;
+  color: var(--accent);
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+  margin-top: 2.8rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+h2 .sec-num {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+h3 {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 1.6rem;
+  margin-bottom: 0.4rem;
+}
+
+h3 .sec-num {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-right: 6px;
+}
+
+p { margin-bottom: 0.9em; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+strong { font-weight: 600; color: #e0dcd4; }
+em { font-style: italic; }
+
+/* ── Header matter ───────────────────────────────────── */
+
+.paper-type {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.author {
+  font-family: var(--serif);
+  font-size: 1.08rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.draft-tag {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Abstract & notation ─────────────────────────────── */
+
+.abstract-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 20px 24px;
+  margin: 28px 0;
+}
+
+.abstract-box .label {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.abstract-box p {
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
+.notation-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin: 20px 0 32px;
+  font-size: 0.88rem;
+  line-height: 1.9;
+}
+
+.notation-box .label {
+  font-family: var(--serif);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* ── Table of contents ───────────────────────────────── */
+
+.toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 24px;
+  margin: 20px 0 36px;
+}
+
+.toc .label {
+  font-family: var(--serif);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.toc ol {
+  padding-left: 24px;
+  font-size: 0.88rem;
+  line-height: 1.9;
+}
+
+.toc a {
+  color: var(--text-dim);
+  transition: color 0.15s;
+}
+
+.toc a:hover { color: var(--accent); text-decoration: none; }
+
+/* ── Display maths ───────────────────────────────────── */
+
+.display-math {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 18px 0;
+  padding: 14px 0;
+  overflow-x: auto;
+}
+
+.display-math .eq-num {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ── Named result boxes ──────────────────────────────── */
+
+.result-box {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-accent);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 20px 0;
+}
+
+.result-box .result-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.result-box.teal {
+  border-color: rgba(78,201,176,0.3);
+}
+
+.result-box.teal .result-label {
+  color: var(--teal);
+}
+
+.result-box.red {
+  border-color: rgba(212,86,78,0.3);
+}
+
+.result-box.red .result-label {
+  color: var(--red);
+}
+
+/* ── Callout (remark, example) ───────────────────────── */
+
+.callout {
+  border-left: 3px solid var(--border-accent);
+  padding: 12px 18px;
+  margin: 16px 0;
+  background: rgba(232,196,106,0.03);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.92rem;
+}
+
+.callout.teal {
+  border-left-color: rgba(78,201,176,0.4);
+  background: rgba(78,201,176,0.03);
+}
+
+.callout .callout-label {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 4px;
+}
+
+/* ── References ──────────────────────────────────────── */
+
+.references {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.references h2 { border-bottom: none; margin-top: 0; }
+
+.ref-list {
+  font-size: 0.86rem;
+  line-height: 1.8;
+}
+
+.ref-list .ref-num {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-right: 6px;
+}
+
+/* ── Footer ──────────────────────────────────────────── */
+
+.footer-note {
+  margin-top: 3.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  body { padding: 24px 14px 60px; }
+  h1 { font-size: 1.7rem; }
+  h2 { font-size: 1.25rem; }
+  .display-math { flex-direction: column; gap: 4px; }
+  .display-math .eq-num { text-align: center; }
+}
+
+/* ── KaTeX overrides ─────────────────────────────────── */
+
+.katex { font-size: 1.05em; }
+.katex-display { margin: 0; }
+.katex-display > .katex { text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+
+<div class="paper-type">Working Paper · Algebraic Number Theory</div>
+
+<h1><em>Metallic</em> Means and Differences of Consecutive Square Roots</h1>
+
+<div class="author">Lee McCulloch-James</div>
+<div class="draft-tag">Draft, 2026</div>
+
+<!-- ═══════════════════ ABSTRACT ═══════════════════ -->
+
+<div class="abstract-box">
+  <div class="label">Abstract</div>
+  <p>For the silver ratio, every positive integer power of its reciprocal can be written as a difference $\sqrt{N+1} - \sqrt{N}$ of square roots of consecutive integers. We generalise this question to the full metallic-mean family (parameter $k \in \mathbb{Z}_{\geq 1}$) and find a sharp parity phenomenon: for even $k$ the representation holds for every exponent, while for odd $k$ it holds exactly for exponents divisible by 3. Explicit generators and recurrences are given. The period-3 pattern for odd $k$ is traced to the cyclotomic polynomial $x^2 + x + 1$, the minimal polynomial of primitive cube roots of unity, acting in the mod-4 quotient of a Lucas-type recurrence. The even/odd dichotomy reflects the structure of rings of integers in quadratic fields: when $k$ is odd, the ring $\mathbb{Z}[(1+\sqrt{D})/2]$ has a half-integer lattice that forces the period-3 oscillation.</p>
+</div>
+
+<!-- ═══════════════════ NOTATION ═══════════════════ -->
+
+<div class="notation-box">
+  <div class="label">Notation and conventions</div>
+  $k \in \mathbb{Z}_{\geq 1}$: the metallic-mean parameter<br>
+  $\delta_k = (k + \sqrt{k^2 + 4})/2$: the metallic mean (positive root of $x^2 - kx - 1 = 0$)<br>
+  $\delta_k^{-1}$: its reciprocal, lying in $(0,1)$; the quantity whose powers we study<br>
+  $S_n(k) = \delta_k^{2n} + \delta_k^{-2n}$: a Lucas-type trace sequence<br>
+  $M_n(k) = (S_n - 2)/4$: the generator (candidate integer under the square root)<br>
+  $\lambda_k = \delta_k^2$: the squared metallic mean<br>
+  $D = k^2 + 4$: the discriminant of the characteristic quadratic<br>
+  $\mathcal{O}_K$: the ring of integers of $K = \mathbb{Q}(\sqrt{D})$
+</div>
+
+<!-- ═══════════════════ CONTENTS ═══════════════════ -->
+
+<div class="toc">
+  <div class="label">Contents</div>
+  <ol>
+    <li><a href="#s1">Preamble: from a Twitter observation to a generating function</a></li>
+    <li><a href="#s2">The metallic means</a></li>
+    <li><a href="#s3">The basic algebraic mechanism</a></li>
+    <li><a href="#s4">An integer sequence in the background</a></li>
+    <li><a href="#s5">Main theorem: even $k$ vs odd $k$</a></li>
+    <li><a href="#s6">Examples: golden, silver, bronze</a></li>
+    <li><a href="#s7">A compact recurrence for the generator</a></li>
+    <li><a href="#s8">Geometric perspectives: why periodicity appears</a></li>
+    <li><a href="#s9">The cyclotomic polynomial and period 3</a></li>
+    <li><a href="#s10">The Minkowski picture: the hyperbola orbit</a></li>
+    <li><a href="#s11">The even/odd dichotomy in quadratic rings</a></li>
+    <li><a href="#s12">Summary</a></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════ §1 PREAMBLE ═══════════════════ -->
+
+<h2 id="s1"><span class="sec-num">1</span>Preamble: from a Twitter observation to a generating function</h2>
+
+<p>In October 2022, the account <a href="https://twitter.com/MathsTechnology">@MathsTechnology</a> posted the following three identities:</p>
+
+<div class="display-math">
+  $$(\sqrt{2} - 1)^2 = \sqrt{9} - \sqrt{8},$$
+</div>
+<div class="display-math">
+  $$(\sqrt{2} - 1)^3 = \sqrt{50} - \sqrt{49},$$
+</div>
+<div class="display-math">
+  $$(\sqrt{2} - 1)^4 = \sqrt{289} - \sqrt{288},$$
+</div>
+
+<p>and asked whether every positive integer power of $\sqrt{2} - 1$ is the difference of square roots of consecutive integers. The integers under the roots grow rapidly: $8, 9$; then $49, 50$; then $288, 289$. Where do they come from?</p>
+
+<p>The first instinct is empirical. Expand $(\sqrt{2}-1)^n$ using the binomial theorem. Each power produces a compound surd of the form $a + m\sqrt{2}$, where $a$ and $m$ are integers (the integer part $a$ appears, on inspection, to be prime for the first several cases). Read off the integers under the square roots. Call the smaller one $P_n$. The first few values are:</p>
+
+<div class="display-math">
+  $$\{P_n\} = \{0, 1, 8, 49, 288, 1681, 9800, 57121, 332928, \ldots\}$$
+</div>
+
+<p>This is <a href="https://oeis.org/A001108">OEIS A001108</a>, whose recursive formula is $P_{n+1} = 6P_n - P_{n-1} + 2$ with $P_0 = 0$ and $P_1 = 1$. But where does the recurrence come from? And does it work for all $n$?</p>
+
+<p>The brute-force route, developed in a <a href="https://mcmurmerings.wordpress.com/2022/10/23/generating-function-for-sequence-from-compound-surd-power-expansion/">McMurmerings blog post</a> and an accompanying <a href="https://docs.google.com/spreadsheets/d/1GvyYs0kvfESktaCybEpGimHTQZq8c9I_SW7nLV2Bm6g/edit">spreadsheet</a>, proceeds by expanding each power, reconstructing the compound surds, spotting the interleaving pattern of $a_n$ and $m_n$, and finally arriving at an explicit generator:</p>
+
+<div class="display-math">
+  $$P_n = \frac{1 - a^{2n} - 2a^n}{4a^n}, \qquad a \equiv (\sqrt{2}-1)^2 = 3 - 2\sqrt{2}.$$
+  <span class="eq-num">(0)</span>
+</div>
+
+<p>This works. But it is specific to $k = 2$ (the silver ratio), it was found by pattern-matching rather than derivation, and it gives no hint as to which other metallic means might share the property. The present paper provides the cleaner algebraic route. The key insight is to solve the <em>inverse problem</em> first: given $y$, when can $y = \sqrt{M+1} - \sqrt{M}$ for integer $M$? This produces the generator formula in one step, the Lucas-type recurrence follows immediately, and the generalisation to all metallic means reveals a sharp even/odd dichotomy that the blog-post approach could not see.</p>
+
+<div class="callout">
+  <div class="callout-label">Pedagogical note</div>
+  The progression from idle observation through spreadsheet experiment to clean algebraic derivation is the intended reading order of the <a href="./">interactive toggle learner</a> that accompanies this paper. The toggle structure mirrors the six stages: observation, sequence extraction, inverse problem, generator, recurrence, and theorem.
+</div>
+
+<!-- ═══════════════════ §2 ═══════════════════ -->
+
+<h2 id="s2"><span class="sec-num">2</span>The metallic means</h2>
+
+<p>Fix an integer $k \geq 1$ and let $\delta_k$ be the metallic mean, the positive root of</p>
+
+<div class="display-math">
+  $$x^2 - kx - 1 = 0,$$
+  <span class="eq-num">(1)</span>
+</div>
+
+<p>so that</p>
+
+<div class="display-math">
+  $$\delta_k = \frac{k + \sqrt{k^2 + 4}}{2}.$$
+  <span class="eq-num">(2)</span>
+</div>
+
+<p>Then $\delta_k > 1$ and its reciprocal $0 < \delta_k^{-1} < 1$ is the quantity whose powers we study. The conjugate root of equation (1) is $\bar{\delta}_k = (k - \sqrt{k^2+4})/2 = -\delta_k^{-1}$, so that $\delta_k \bar{\delta}_k = -1$.</p>
+
+<p>For $k = 1$: the golden ratio $\varphi = (1+\sqrt{5})/2 \approx 1.618$. For $k = 2$: the silver ratio $\delta_2 = 1 + \sqrt{2} \approx 2.414$, whose reciprocal is $\sqrt{2} - 1$. For $k = 3$: the bronze ratio $\delta_3 = (3+\sqrt{13})/2 \approx 3.303$.</p>
+
+<!-- ═══════════════════ §3 ═══════════════════ -->
+
+<h2 id="s3"><span class="sec-num">3</span>The basic algebraic mechanism</h2>
+
+<p>A real number $y \in (0,1)$ can be written in the form</p>
+
+<div class="display-math">
+  $$y = \sqrt{M+1} - \sqrt{M} \qquad (M \geq 0)$$
+  <span class="eq-num">(3)</span>
+</div>
+
+<p>if and only if</p>
+
+<div class="result-box">
+  <div class="result-label">Generator formula</div>
+  <div class="display-math">
+    $$M = \frac{y^{-2} + y^2 - 2}{4}.$$
+    <span class="eq-num">(4)</span>
+  </div>
+</div>
+
+<p><strong>Derivation.</strong> From (3), rationalise: $1/y = \sqrt{M+1} + \sqrt{M}$. Adding and subtracting:</p>
+
+<div class="display-math">
+  $$y + \frac{1}{y} = 2\sqrt{M+1}, \qquad \frac{1}{y} - y = 2\sqrt{M}.$$
+</div>
+
+<p>Squaring the second equation gives $1/y^2 + y^2 - 2 = 4M$, which is (4). Conversely, if $M$ is defined by (4), then $\sqrt{M+1} - \sqrt{M} = y$ (taking the positive root since $y > 0$).</p>
+
+<p>Therefore, for any fixed $k$ and exponent $n \geq 1$, the only possible candidate is obtained by substituting $y = \delta_k^{-n}$ into (4):</p>
+
+<div class="display-math">
+  $$M_n(k) := \frac{\delta_k^{2n} + \delta_k^{-2n} - 2}{4}.$$
+  <span class="eq-num">(5)</span>
+</div>
+
+<p>The original question becomes: <strong>when is $M_n(k) \in \mathbb{Z}_{\geq 0}$?</strong></p>
+
+<!-- ═══════════════════ §4 ═══════════════════ -->
+
+<h2 id="s4"><span class="sec-num">4</span>An integer sequence in the background</h2>
+
+<p>Define</p>
+
+<div class="display-math">
+  $$S_n(k) := \delta_k^{2n} + \delta_k^{-2n}.$$
+  <span class="eq-num">(6)</span>
+</div>
+
+<p>Then $M_n(k) = (S_n - 2)/4$. Let $\lambda_k := \delta_k^2$. Since $\delta_k^2 = k\delta_k + 1$, one checks</p>
+
+<div class="display-math">
+  $$\lambda_k + \lambda_k^{-1} = \delta_k^2 + \delta_k^{-2} = k^2 + 2.$$
+</div>
+
+<p>Hence $(S_n)$ is a Lucas-type sequence:</p>
+
+<div class="result-box teal">
+  <div class="result-label">Lucas-type recurrence</div>
+  <div class="display-math">
+    $$S_{n+1} = (k^2 + 2)\,S_n - S_{n-1}, \qquad S_0 = 2,\; S_1 = k^2 + 2.$$
+    <span class="eq-num">(7)</span>
+  </div>
+</div>
+
+<p>Since the recurrence coefficient and initial values are integers, $S_n \in \mathbb{Z}$ for all $n \geq 0$. The integrality of $M_n(k)$ is therefore purely a congruence question:</p>
+
+<div class="display-math">
+  $$M_n(k) \in \mathbb{Z} \iff S_n(k) \equiv 2 \pmod{4}.$$
+  <span class="eq-num">(8)</span>
+</div>
+
+<!-- ═══════════════════ §5 ═══════════════════ -->
+
+<h2 id="s5"><span class="sec-num">5</span>Main theorem: even $k$ vs odd $k$</h2>
+
+<div class="result-box">
+  <div class="result-label">Theorem 1</div>
+  <p>Let $k \geq 1$ be an integer and let $\delta_k = (k + \sqrt{k^2+4})/2$. Define $M_n(k)$ by (5). Then:</p>
+  <p><strong>1.</strong> If $k$ is even, then $M_n(k) \in \mathbb{Z}_{\geq 0}$ for every $n \geq 1$, and therefore</p>
+  <div class="display-math">
+    $$\delta_k^{-n} = \sqrt{M_n(k) + 1} - \sqrt{M_n(k)} \qquad \text{for all } n \geq 1.$$
+  </div>
+  <p><strong>2.</strong> If $k$ is odd, then $M_n(k) \in \mathbb{Z}_{\geq 0}$ if and only if $3 \mid n$, and therefore</p>
+  <div class="display-math">
+    $$\delta_k^{-n} = \sqrt{M_n(k) + 1} - \sqrt{M_n(k)} \iff 3 \mid n.$$
+  </div>
+</div>
+
+<p><strong>Proof.</strong> Work modulo 4 in the recurrence (7). Write $A := k^2 + 2$.</p>
+
+<p><strong>Case 1: $k$ even.</strong> Then $k^2 \equiv 0 \pmod{4}$, so $A \equiv 2 \pmod{4}$ and $S_{n+1} \equiv 2S_n - S_{n-1} \pmod{4}$. Since $S_0 = 2$ and $S_1 = A \equiv 2$, by induction $S_n \equiv 2 \pmod{4}$ for all $n$. Hence $(S_n - 2)/4$ is always an integer.</p>
+
+<p><strong>Case 2: $k$ odd.</strong> Then $k^2 \equiv 1 \pmod{4}$, so $A \equiv 3 \pmod{4}$ and $S_{n+1} \equiv 3S_n - S_{n-1} \equiv -S_n - S_{n-1} \pmod{4}$. Now $S_0 \equiv 2$ and $S_1 \equiv 3$, so the first terms mod 4 are</p>
+
+<div class="display-math">
+  $$S_n \equiv 2,\; 3,\; 3,\; 2,\; 3,\; 3,\; 2,\; 3,\; 3,\; \ldots \pmod{4},$$
+</div>
+
+<p>and the recurrence forces this period-3 pattern to persist. Therefore $S_n \equiv 2 \pmod{4}$ exactly when $n \equiv 0 \pmod{3}$, i.e. $3 \mid n$. $\square$</p>
+
+<div class="callout teal">
+  <div class="callout-label">Corollary</div>
+  Whenever $M_n(k)$ is an integer, we have the explicit identity $\delta_k^{-n} = \sqrt{M_n(k) + 1} - \sqrt{M_n(k)}$, with $M_n(k)$ given by (5).
+</div>
+
+<!-- ═══════════════════ §6 ═══════════════════ -->
+
+<h2 id="s6"><span class="sec-num">6</span>Examples: golden, silver, bronze</h2>
+
+<h3><span class="sec-num">6.1</span>Golden ($k = 1$)</h3>
+
+<p>Here $\delta_1 = \varphi = (1+\sqrt{5})/2$. Theorem 1 says the representation holds exactly for $3 \mid n$. Indeed:</p>
+
+<div class="display-math">
+  $$\varphi^{-3} = \sqrt{5} - \sqrt{4}, \quad \text{since } M_3(1) = 4.$$
+</div>
+
+<p>Next, $M_6(1) = 80$ and $\varphi^{-6} = \sqrt{81} - \sqrt{80}$.</p>
+
+<h3><span class="sec-num">6.2</span>Silver ($k = 2$)</h3>
+
+<p>Here $\delta_2 = 1 + \sqrt{2}$ and the representation holds for all $n$. The first values are</p>
+
+<div class="display-math">
+  $$M_1(2) = 1,\; M_2(2) = 8,\; M_3(2) = 49,\; M_4(2) = 288, \ldots$$
+</div>
+
+<p>giving the identities from the Twitter post:</p>
+
+<div class="display-math">
+  $$(\sqrt{2}-1)^2 = \sqrt{9} - \sqrt{8}, \quad (\sqrt{2}-1)^3 = \sqrt{50} - \sqrt{49}, \quad (\sqrt{2}-1)^4 = \sqrt{289} - \sqrt{288}, \ldots$$
+</div>
+
+<p>This recovers OEIS A001108 and the generator (0) from the blog post, now derived rather than guessed.</p>
+
+<h3><span class="sec-num">6.3</span>Bronze ($k = 3$)</h3>
+
+<p>Here $\delta_3 = (3+\sqrt{13})/2$, and again Theorem 1 says the representation holds exactly for $3 \mid n$. The first working exponent is $n = 3$:</p>
+
+<div class="display-math">
+  $$M_3(3) = 324, \quad \delta_3^{-3} = \sqrt{325} - \sqrt{324}.$$
+</div>
+
+<p>Then $n = 6$ gives $M_6(3) = 421200$ and $\delta_3^{-6} = \sqrt{421201} - \sqrt{421200}$.</p>
+
+<!-- ═══════════════════ §7 ═══════════════════ -->
+
+<h2 id="s7"><span class="sec-num">7</span>A compact recurrence for the generator</h2>
+
+<p>When $M_n(k)$ is integral, it inherits a recurrence from (7). Since $S_n = 4M_n + 2$:</p>
+
+<div class="display-math">
+  $$4M_{n+1} + 2 = (k^2+2)(4M_n + 2) - (4M_{n-1} + 2),$$
+</div>
+
+<p>which simplifies to</p>
+
+<div class="result-box">
+  <div class="result-label">Generator recurrence</div>
+  <div class="display-math">
+    $$M_{n+1} = (k^2+2)\,M_n - M_{n-1} + \frac{k^2}{2}.$$
+    <span class="eq-num">(9)</span>
+  </div>
+</div>
+
+<p>This is an integer recurrence precisely when $k$ is even (since $k^2/2 \in \mathbb{Z}$). For odd $k$, one should restrict to the subsequence $n = 3m$, which then satisfies an integer recurrence derived from composing three steps of (7).</p>
+
+<p>For $k = 2$: $M_{n+1} = 6M_n - M_{n-1} + 2$, matching OEIS A001108 exactly.</p>
+
+<!-- ═══════════════════ §8 ═══════════════════ -->
+
+<h2 id="s8"><span class="sec-num">8</span>Geometric perspectives: why periodicity appears</h2>
+
+<p>Theorem 1 was proved by a congruence calculation. We now explain <em>why</em> such a congruence argument must lead to periodic behaviour, and why period 3 is the one that appears when $k$ is odd.</p>
+
+<h3><span class="sec-num">8.1</span>A finite-state viewpoint (why cycles occur)</h3>
+
+<p>Reducing the recurrence (7) modulo 4 turns it into an update rule on the finite set $(\mathbb{Z}/4\mathbb{Z})^2$:</p>
+
+<div class="display-math">
+  $$(S_{n+1}, S_n) \equiv (A\,S_n - S_{n-1},\; S_n) \pmod{4}, \qquad A = k^2 + 2.$$
+</div>
+
+<p>The sequence of pairs $(S_n, S_{n-1}) \bmod 4$ must eventually repeat, and therefore is purely periodic from the start (since $S_0, S_1$ are fixed).</p>
+
+<p>When $k$ is even, $A \equiv 2$ and the orbit is constant at $S_n \equiv 2$.</p>
+
+<p>When $k$ is odd, $A \equiv 3$ and the orbit has period 3, giving the pattern $2, 3, 3, 2, 3, 3, \ldots$</p>
+
+<!-- ═══════════════════ §9 ═══════════════════ -->
+
+<h2 id="s9"><span class="sec-num">9</span>The cyclotomic polynomial and period 3</h2>
+
+<p>The recurrence (7) has characteristic polynomial</p>
+
+<div class="display-math">
+  $$x^2 - (k^2 + 2)x + 1.$$
+</div>
+
+<p>Modulo 4, this becomes:</p>
+
+<div class="display-math">
+  $$\begin{cases} (x-1)^2, & k \text{ even},\\ x^2 + x + 1, & k \text{ odd}. \end{cases}$$
+</div>
+
+<p>Since $x^2 + x + 1$ divides $x^3 - 1$, the corresponding linear action has order 3 in the mod-4 quotient, forcing the period-3 pattern in $S_n \bmod 4$.</p>
+
+<div class="result-box teal">
+  <div class="result-label">Cyclotomic interpretation</div>
+  <p>The polynomial $x^2 + x + 1$ is the minimal polynomial of primitive cube roots of unity. When $k$ is odd, the recurrence behaves modulo 4 as if its eigenvalue were a cube root of unity on the unit circle $|z| = 1$ in $\mathbb{C}$.</p>
+</div>
+
+<!-- ═══════════════════ §10 ═══════════════════ -->
+
+<h2 id="s10"><span class="sec-num">10</span>The Minkowski picture: the hyperbola orbit</h2>
+
+<p>Independently of congruences, conjugation places $\delta_k^n$ and $\delta_k^{-n}$ on a hyperbola. Set $x = \delta_k^n$, $y = \delta_k^{-n}$. Then $xy = 1$, so $(x,y)$ lies on the hyperbola $xy = 1$. Moreover,</p>
+
+<div class="display-math">
+  $$S_n = \delta_k^{2n} + \delta_k^{-2n} = x^2 + y^2, \qquad M_n(k) = \frac{S_n - 2}{4}.$$
+</div>
+
+<p>Thus the "difference of consecutive square roots" condition is exactly the statement $x^2 + y^2 \equiv 2 \pmod{4}$, i.e. a congruence restriction on a natural coordinate of points on the hyperbola orbit.</p>
+
+<p>In log-coordinates $u = \log x$, $v = \log y$, the hyperbola becomes the line $v = -u$ and the orbit is an arithmetic progression:</p>
+
+<div class="display-math">
+  $$(u, v) = (n \log \delta_k,\; -n \log \delta_k).$$
+</div>
+
+<p>The cyclotomic analysis explains why, when $k$ is odd, only every third step along this arithmetic progression lands in the congruence class that yields an integer $M_n(k)$.</p>
+
+<div class="callout">
+  <div class="callout-label">The duality</div>
+  <p>These are the two faces of quadratic algebra:</p>
+  <p><strong>Euclidean-Pythagorean:</strong> $x^2 + y^2 = r^2$ (circles, cyclotomic units, roots of unity)</p>
+  <p><strong>Minkowskian-hyperbolic:</strong> $xy = c$ (hyperbolas, norm-one units, conjugate pairs)</p>
+  <p>The period-3 pattern arises from the cyclotomic viewpoint (mod-4 behaviour mimics cube roots of unity), while the consecutive-square-root representation is visible from the Minkowskian viewpoint (points on $xy = 1$).</p>
+</div>
+
+<!-- ═══════════════════ §11 ═══════════════════ -->
+
+<h2 id="s11"><span class="sec-num">11</span>The even/odd dichotomy in quadratic rings</h2>
+
+<p>The even/odd dichotomy ultimately stems from the structure of rings of integers in quadratic fields. Let $K = \mathbb{Q}(\sqrt{D})$ where $D = k^2 + 4$.</p>
+
+<p><strong>When $k$ is even,</strong> $D \equiv 0 \pmod{4}$ and $\mathcal{O}_K = \mathbb{Z}[\sqrt{D}]$. Traces of algebraic integers lie in $\mathbb{Z}$, so $S_n = \operatorname{Tr}_{K/\mathbb{Q}}(\delta_k^{2n})$ is an integer with no denominator issues. Reducing modulo 4 gives a constant sequence.</p>
+
+<p><strong>When $k$ is odd,</strong> $D \equiv 1 \pmod{4}$ and $\mathcal{O}_K = \mathbb{Z}\!\left[\frac{1+\sqrt{D}}{2}\right]$. The shift to a "half-integer lattice" introduces a denominator-2 offset. While $S_n$ is still an integer (since $\delta_k^{2n}$ lies in $\mathbb{Z}[\sqrt{D}]$, not the full $\mathcal{O}_K$), the finer structure of $\mathcal{O}_K$ causes the mod-4 projection to pick up the period-3 oscillation, reflecting the $x^2 + x + 1$ cyclotomic factor.</p>
+
+<!-- ═══════════════════ §12 SUMMARY ═══════════════════ -->
+
+<h2 id="s12"><span class="sec-num">12</span>Summary</h2>
+
+<p>For $\delta_k = (k + \sqrt{k^2+4})/2$, the reciprocal powers $\delta_k^{-n}$ admit a consecutive square-root representation</p>
+
+<div class="display-math">
+  $$\delta_k^{-n} = \sqrt{M_n(k) + 1} - \sqrt{M_n(k)}$$
+</div>
+
+<p>exactly when $S_n = \delta_k^{2n} + \delta_k^{-2n} \equiv 2 \pmod{4}$, with $M_n(k) = (S_n - 2)/4$.</p>
+
+<p>This holds for all $n$ when $k$ is even, and for $3 \mid n$ when $k$ is odd.</p>
+
+<p>The parity phenomenon has three complementary explanations:</p>
+
+<p><strong>Finite-state:</strong> modulo 4, the recurrence becomes a finite update rule that must cycle. For odd $k$, the characteristic polynomial $x^2 + x + 1$ forces period 3.</p>
+
+<p><strong>Cyclotomic:</strong> the polynomial $x^2 + x + 1$ is the minimal polynomial of primitive cube roots of unity. The mod-4 behaviour mimics roots of unity on the circle $|z| = 1$.</p>
+
+<p><strong>Minkowskian:</strong> points $(\delta_k^n, \delta_k^{-n})$ lie on the hyperbola $xy = 1$. The integrality condition $S_n \equiv 2 \pmod{4}$ is a congruence on the coordinate $x^2 + y^2$ along this orbit.</p>
+
+<p>The even/odd dichotomy stems from the structure of quadratic rings: when $k$ is odd, the ring of integers $\mathbb{Z}[(1 + \sqrt{D})/2]$ has a half-integer lattice that introduces the period-3 oscillation.</p>
+
+<!-- ═══════════════════ REFERENCES ═══════════════════ -->
+
+<div class="references">
+  <h2>References</h2>
+  <div class="ref-list">
+    <p><span class="ref-num">[1]</span> McCulloch-James, L. (2022). Generating function for nth-triangle is-a-square sequence from a compound surd power expansion. <a href="https://mcmurmerings.wordpress.com/2022/10/23/generating-function-for-sequence-from-compound-surd-power-expansion/"><em>McMurmerings</em></a>.</p>
+    <p><span class="ref-num">[2]</span> OEIS Foundation. A001108: $a(n) = a(n-1) \cdot 6 - a(n-2) + 2$. <a href="https://oeis.org/A001108">oeis.org/A001108</a>.</p>
+    <p><span class="ref-num">[3]</span> OEIS Foundation. A090390. <a href="https://oeis.org/A090390">oeis.org/A090390</a>.</p>
+    <p><span class="ref-num">[4]</span> Weisstein, E. W. Metallic mean. <a href="https://mathworld.wolfram.com/MetallicMean.html"><em>MathWorld</em></a>.</p>
+    <p><span class="ref-num">[5]</span> Lucas, É. (1878). Théorie des fonctions numériques simplement périodiques. <em>Amer. J. Math.</em>, <strong>1</strong>(2), 184–240.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+
+<div class="footer-note">
+  <p>KaTeX rendering</p>
+</div>
+
+</body>
+</html>
